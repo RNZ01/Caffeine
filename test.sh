@@ -29,5 +29,13 @@ assert_eq "true" "$(plutil -extract LSUIElement raw "$PLIST")" "menu bar mode"
 codesign --verify --deep --strict "$APP"
 hdiutil imageinfo "$DMG" >/dev/null
 (cd "$(dirname "$DMG")" && shasum -a 256 -c "$(basename "$DMG").sha256") >/dev/null
+MOUNT="$(mktemp -d /tmp/caffeine-dmg.XXXX)"
+hdiutil attach "$DMG" -mountpoint "$MOUNT" -nobrowse -quiet >/dev/null
+trap 'hdiutil detach "$MOUNT" -quiet 2>/dev/null || true; rmdir "$MOUNT" 2>/dev/null || true' EXIT
+[[ -d "$MOUNT/Caffeine.app" ]] || { echo "DMG missing app" >&2; exit 1; }
+[[ "$(readlink "$MOUNT/Applications")" == "/Applications" ]] || { echo "DMG missing Applications shortcut" >&2; exit 1; }
+hdiutil detach "$MOUNT" -quiet
+trap - EXIT
+rmdir "$MOUNT"
 
 echo "Tests passed"

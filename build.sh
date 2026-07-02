@@ -8,8 +8,9 @@ BUILD="${BUILD:-1}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 APP="$ROOT/build/$APP_NAME.app"
 DMG="$ROOT/build/$APP_NAME-$VERSION.dmg"
+DMG_ROOT="$ROOT/build/dmg-root"
 
-rm -rf "$APP" "$DMG"
+rm -rf "$APP" "$DMG" "$DMG_ROOT"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 MACOSX_DEPLOYMENT_TARGET=11.0 swiftc "$ROOT/Sources/Caffeine/main.swift" \
@@ -60,7 +61,10 @@ fi
 codesign "${codesign_args[@]}" "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 
-hdiutil create -quiet -volname "$APP_NAME $VERSION" -srcfolder "$APP" -ov -format UDZO "$DMG"
+mkdir -p "$DMG_ROOT"
+cp -R "$APP" "$DMG_ROOT/"
+ln -s /Applications "$DMG_ROOT/Applications"
+hdiutil create -quiet -volname "$APP_NAME $VERSION" -srcfolder "$DMG_ROOT" -ov -format UDZO "$DMG"
 hdiutil imageinfo "$DMG" >/dev/null
 (cd "$(dirname "$DMG")" && shasum -a 256 "$(basename "$DMG")") > "$DMG.sha256"
 
