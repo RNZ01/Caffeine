@@ -142,9 +142,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var isStartAtLoginEnabled: Bool {
         if #available(macOS 13.0, *) {
-            return SMAppService.mainApp.status == .enabled
+            return SMAppService.mainApp.status == .enabled || FileManager.default.fileExists(atPath: launchAgentURL.path)
         }
-        return false
+        return FileManager.default.fileExists(atPath: launchAgentURL.path)
     }
 
     private var launchAgentURL: URL {
@@ -157,32 +157,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if #available(macOS 13.0, *) {
             enabled ? try SMAppService.mainApp.register() : try SMAppService.mainApp.unregister()
-        } else {
-            try setLegacyStartAtLogin(enabled)
+        } else if enabled {
+            try setLegacyStartAtLogin()
         }
     }
 
-    private func setLegacyStartAtLogin(_ enabled: Bool) throws {
-        let script = """
-        on run argv
-            set appName to item 1 of argv
-            set appPath to item 2 of argv
-            set shouldEnable to item 3 of argv
-            tell application "System Events"
-                if shouldEnable is "1" then
-                    if not (exists login item appName) then make login item at end with properties {name:appName, path:appPath, hidden:false}
-                else
-                    if exists login item appName then delete login item appName
-                end if
-            end tell
-        end run
-        """
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script, "Caffeine", Bundle.main.bundlePath, enabled ? "1" : "0"]
-        try process.run()
-        process.waitUntilExit()
-        if process.terminationStatus != 0 { throw NSError(domain: "Caffeine", code: Int(process.terminationStatus)) }
+    private func setLegacyStartAtLogin() throws {
+        guard let executablePath = Bundle.main.executablePath else {
+            throw NSError(domain: "Caffeine", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find app executable path."])
+        }
+
+        try FileManager.default.createDirectory(
+            at: launchAgentURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+
+        let plist: [String: Any] = [
+            "Label": Bundle.main.bundleIdentifier ?? "local.caffeine",
+            "ProgramArguments": [executablePath],
+            "RunAtLoad": true
+        ]
+        if !(plist as NSDictionary).write(to: launchAgentURL, atomically: true) {
+            throw NSError(domain: "Caffeine", code: 2, userInfo: [NSLocalizedDescriptionKey: "Could not write login item."])
+        }
     }
 
     private func menuItem(_ title: String, _ action: Selector?, key: String = "") -> NSMenuItem {
