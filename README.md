@@ -1,5 +1,7 @@
 # Caffeine
 
+![Caffeine app logo](Assets/icon.png)
+
 Caffeine is a small macOS menu-bar app that keeps your Mac awake with Apple's built-in `/usr/bin/caffeinate` command. It has no network service, account, analytics, or background daemon beyond the running menu-bar app.
 
 ## Supported macOS versions
