@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Build output
+build/
+DerivedData/
+.swiftpm/
+
+# Xcode/user state
+*.xcuserstate
+xcuserdata/
+
+# Local config/secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.mobileprovision
