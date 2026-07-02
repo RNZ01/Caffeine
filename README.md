@@ -77,4 +77,4 @@ Current version: 1.0
 
 ## License
 
-No open-source license is currently included. Contact the owner before redistribution.
+Caffeine is open source under the [MIT License](LICENSE).
