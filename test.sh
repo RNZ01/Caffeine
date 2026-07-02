@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 APP="$ROOT/build/Caffeine.app"
-DMG="$ROOT/build/Caffeine-1.0.dmg"
+ARCH="${ARCH:-$(uname -m)}"
+DMG="$ROOT/build/Caffeine-1.0-$ARCH.dmg"
 PLIST="$APP/Contents/Info.plist"
 
 assert_eq() {
@@ -13,7 +14,7 @@ assert_eq() {
 
 bash -n "$ROOT/build.sh"
 MACOSX_DEPLOYMENT_TARGET=11.0 swiftc "$ROOT/Sources/Caffeine/main.swift" -typecheck -framework AppKit
-"$ROOT/build.sh" >/tmp/caffeine-build.log
+ARCH="$ARCH" "$ROOT/build.sh" >/tmp/caffeine-build.log
 
 [[ -x "$APP/Contents/MacOS/Caffeine" ]] || { echo "missing executable" >&2; exit 1; }
 [[ -f "$APP/Contents/Resources/AppIcon.icns" ]] || { echo "missing app icon" >&2; exit 1; }
@@ -25,6 +26,7 @@ assert_eq "local.caffeine" "$(plutil -extract CFBundleIdentifier raw "$PLIST")" 
 assert_eq "1.0" "$(plutil -extract CFBundleShortVersionString raw "$PLIST")" "version"
 assert_eq "11.0" "$(plutil -extract LSMinimumSystemVersion raw "$PLIST")" "minimum macOS"
 assert_eq "true" "$(plutil -extract LSUIElement raw "$PLIST")" "menu bar mode"
+file "$APP/Contents/MacOS/Caffeine" | grep -q "$ARCH" || { echo "wrong executable architecture" >&2; exit 1; }
 
 codesign --verify --deep --strict "$APP"
 hdiutil imageinfo "$DMG" >/dev/null

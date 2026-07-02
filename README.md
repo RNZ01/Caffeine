@@ -23,9 +23,10 @@ Start at Login uses `SMAppService` on macOS 13+ and a user LaunchAgent on macOS 
 
 ## Install from release DMG
 
-1. Open `Caffeine-1.0.dmg`.
-2. Drag `Caffeine.app` to `/Applications`.
-3. Open Caffeine from `/Applications`.
+1. Download `Caffeine-1.0-arm64.dmg` for Apple silicon or `Caffeine-1.0-x86_64.dmg` for Intel.
+2. Open the DMG.
+3. Drag `Caffeine.app` to `Applications`.
+4. Open Caffeine from `/Applications`.
 
 The local build is ad-hoc signed by default. For public distribution, build with a Developer ID signing identity and notarize the DMG before publishing.
 
@@ -41,7 +42,9 @@ open build/Caffeine.app
 Release artifacts:
 
 ```sh
-ls build/Caffeine-1.0.dmg build/Caffeine-1.0.dmg.sha256
+ARCH=arm64 ./build.sh
+ARCH=x86_64 ./build.sh
+ls build/Caffeine-1.0-arm64.dmg build/Caffeine-1.0-x86_64.dmg
 ```
 
 Optional Developer ID signing:

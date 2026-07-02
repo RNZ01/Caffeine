@@ -5,16 +5,18 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 APP_NAME="Caffeine"
 VERSION="${VERSION:-1.0}"
 BUILD="${BUILD:-1}"
+ARCH="${ARCH:-$(uname -m)}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 APP="$ROOT/build/$APP_NAME.app"
-DMG="$ROOT/build/$APP_NAME-$VERSION.dmg"
-DMG_ROOT="$ROOT/build/dmg-root"
+DMG="$ROOT/build/$APP_NAME-$VERSION-$ARCH.dmg"
+DMG_ROOT="$ROOT/build/dmg-root-$ARCH"
 
 rm -rf "$APP" "$DMG" "$DMG_ROOT"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 MACOSX_DEPLOYMENT_TARGET=11.0 swiftc "$ROOT/Sources/Caffeine/main.swift" \
   -O \
+  -target "$ARCH-apple-macos11" \
   -framework AppKit \
   -o "$APP/Contents/MacOS/$APP_NAME"
 
